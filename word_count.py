@@ -6,8 +6,8 @@ spark = SparkSession\
   .appName("word-count")\
   .getOrCreate()
   
-# Look at 'books' directory on HDFS
-!hadoop fs -ls books
+# Copy data to HDFS
+!hadoop fs -put data/books books
 
 # Read book text into an RDD called 'lines'
 lines = spark.read.text("books")\
