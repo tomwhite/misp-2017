@@ -8,6 +8,7 @@ spark = SparkSession\
   
 # Copy data to HDFS
 !hadoop fs -put data/books books
+!hadoop fs -ls books
 
 # Read book text into an RDD called 'lines'
 lines = spark.read.text("books")\
