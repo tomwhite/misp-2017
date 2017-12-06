@@ -16,9 +16,13 @@ def find_files(passage_number, moi='high'):
 
   # Find files for given criteria
   p2_high_moi = metadata.filter(metadata["PassageNumber"] == passage_number)\
-    .filter(metadata["MOI"] == moi)
+    .filter(metadata["MOI"] == moi)\
+    .filter(metadata["MutagenicConditon"] == 'none')\
+    .filter(metadata["ReplicateNumber"].isin("8", "9", "11"))
   if p2_high_moi.count() == 0:
     print("No files found!")
+  else:
+    print("Files found:", p2_high_moi.count())
   p2_high_moi_files = p2_high_moi.select('SampleName').rdd.map(lambda r: "misp/CHIKV_CARIB/" + r.SampleName.lower() + "_del_sort.csv").collect()
   return p2_high_moi_files
 
@@ -52,7 +56,7 @@ def get_aggregated_read_counts_by_del_start(files):
 # Gene seq: https://www.ncbi.nlm.nih.gov/nuccore/LN898112.1
 
 import matplotlib.pyplot as plt
-def show_chart(df_grouped):
+def show_chart(df_grouped, title):
   # Convert to pandas and show a bar chart with matplotlib
   pdf=df_grouped.toPandas()
   
@@ -97,6 +101,7 @@ def show_chart(df_grouped):
   plt.plot([9799, 9981], [gene_y_pos, gene_y_pos], 'k-', color='y')
   plt.plot([9982, 11298], [gene_y_pos, gene_y_pos], 'k-', color='m')
   
+  plt.title('Deletion frequency by position ' + title)
   plt.xlabel('DEL start')
   plt.ylabel('Aggregate read count')
   
@@ -104,9 +109,33 @@ def show_chart(df_grouped):
   
 p2_files = find_files(2)
 p2_df = get_aggregated_read_counts_by_del_start(p2_files)
-show_chart(p2_df)
+show_chart(p2_df, "(Passage 2)")
 
 p12_files = find_files(12)
 p12_df = get_aggregated_read_counts_by_del_start(p12_files)
-show_chart(p12_df)
+show_chart(p12_df, "(Passage 12)")
+# Notice deletion start positions disappear for the structural proteins
 
+# Find distribution of del lengths
+def get_del_dist(files):
+  df = spark.read.format("csv").option("header", "true").load(files)
+  # Change some columns to ints
+  df_num = df.withColumn("coveragei", df["coverage"].cast("int")).withColumn("starti", df["start position"].cast("int")).withColumn("sizei", df["size of event"].cast("int")).withColumn("readcounti", df["read count"].cast("int"))
+  
+  # Only include deletions of size > 30
+  df_num = df_num.filter(df_num["sizei"] > 30)
+
+  return df_num
+  
+def show_del_len_hist(df):
+  pdf=df.toPandas()
+  plt.hist(pdf['sizei'], bins=30)
+
+p2_del_dist = get_del_dist(p2_files)
+show_del_len_hist(p2_del_dist)
+
+p12_del_dist = get_del_dist(p12_files)
+show_del_len_hist(p12_del_dist)
+  
+# TODO: measure entropy somehow?
+# TODO: which part of genome has a DEL in each passage?
