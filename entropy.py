@@ -1,4 +1,5 @@
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import col
 from pyspark.sql.functions import collect_list
 from pyspark.sql.functions import input_file_name
 from pyspark.sql.functions import sum
@@ -23,7 +24,8 @@ def find_files(passage_number, replicate_number, moi='high'):
   p2_high_moi = metadata.filter(metadata["PassageNumber"] == passage_number)\
     .filter(metadata["MOI"] == moi)\
     .filter(metadata["MutagenicConditon"] == 'none')\
-    .filter(metadata["ReplicateNumber"] == str(replicate_number))
+    .filter(metadata["ReplicateNumber"] == str(replicate_number))\
+    .filter(metadata["SampleName"].like("%C1%"))
   if p2_high_moi.count() == 0:
     print("No files found!")
   else:
@@ -31,14 +33,7 @@ def find_files(passage_number, replicate_number, moi='high'):
   p2_high_moi_files = p2_high_moi.select('SampleName').rdd.map(lambda r: "misp/CHIKV_CARIB/" + r.SampleName.lower() + "_del_sort.csv").collect()
   return p2_high_moi_files
 
-# passage 2, 4, 5, 7, 9, 10, 12
-
-for passage in (2, 4, 5, 7, 9, 10, 12):
-  for replicate in (8, 9, 11, 12):
-    files = find_files(passage, replicate)
-    print(passage, replicate)
-    print(files)
-    
+# Get total library size for a given sample (sequencing run)
 def get_total_read_counts():
   total_reads = spark.read.format("csv").load("misp/CHIKV_CARIB_total_reads.csv")
   total_reads.show()
@@ -47,7 +42,10 @@ def get_total_read_counts():
   return dict(counts)
                
     
+# Find the mean of the values in a list
 def mean(l):
+  if len(l) == 0:
+    return None
   return __builtin__.sum(l)/float(len(l))
 
 
@@ -77,10 +75,17 @@ def get_del_frequency(files):
 
 # See https://math.stackexchange.com/questions/395121/how-entropy-scales-with-sample-size
 def normalized_entropy(ps):
+  if ps == None:
+    return None
   return __builtin__.sum([-1.0 * math.log(p_i) * p_i for p_i in ps]) / math.log(len(ps))
 
+
+# Convert counts to probabilities
 def turn_to_probabilities(counts, total_count):
+  if total_count == 0:
+    return None
   return [count / float(total_count) for count in counts]
+
 
 def get_del_entropy(files):
   
@@ -115,6 +120,13 @@ files=[]
 
 replicates = [8, 9, 11, 12]
 passages = [2, 4, 5, 7, 9, 10, 12]
+
+for passage in passages:
+  for replicate in replicates:
+    files = find_files(passage, replicate)
+    print(passage, replicate)
+    print(files)
+
 entropydict = {}
 for replicate in replicates:
   freqs=[]
@@ -125,9 +137,12 @@ for replicate in replicates:
     print(files)
     #f = get_del_frequency(files)
     #print(f)
-    e = get_del_entropy(files)
+    if (len(files) == 0):
+      e = None
+    else:
+      e = get_del_entropy(files)
     print(e)
-    freqs.append(f)
+    #freqs.append(f)
     ents.append(e)
   entropydict[replicate] = ents
     
@@ -145,10 +160,14 @@ plot_freq()
 def plot_ent():
   i = 0
   colors = ['r', 'g', 'b', 'm']
+  handles = []
   for (replicate, ents) in entropydict.items():
-    plt.plot(passages, ents, colors[i] + 'o')
     plt.plot(passages, ents, 'k-')
+    plt.plot(passages, ents, colors[i] + 'o', label="Replicate " + str(replicate))
     i += 1
+  plt.legend()
+  plt.title('Entropy of Chikungunya DG population by passage (experiment C1, high MOI, no mutagens)')
+  plt.xlabel('Passage')
   plt.ylabel('Normalized Shannon Entropy (within DG population)')
   plt.show() 
 plot_ent()
