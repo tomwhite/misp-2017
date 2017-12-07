@@ -1,8 +1,10 @@
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import collect_list
 from pyspark.sql.functions import input_file_name
 from pyspark.sql.functions import sum
 from pyspark.sql.functions import max
 import __builtin__
+import math
   
 # Start a Spark session
 spark = SparkSession\
@@ -72,13 +74,76 @@ def get_del_frequency(files):
   return mean([count / float(c[filename]) for (filename, count) in r])
 
 
+# See https://math.stackexchange.com/questions/395121/how-entropy-scales-with-sample-size
+def normalized_entropy(ps):
+  return __builtin__.sum([-1.0 * math.log(p_i) * p_i for p_i in ps]) / math.log(len(ps))
+
+def turn_to_probabilities(counts, total_count):
+  return [count / float(total_count) for count in counts]
+
+def get_del_entropy(files):
+  
+  df = spark.read.format("csv").option("header", "true").load(files)
+
+  # Change some columns to ints
+  df_num = df.withColumn("coveragei", df["coverage"].cast("int"))\
+    .withColumn("starti", df["start position"].cast("int"))\
+    .withColumn("sizei", df["size of event"].cast("int"))\
+    .withColumn("readcounti", df["read count"].cast("int"))\
+    .withColumn("filename", input_file_name()) # add filename
+  
+  # Only include deletions of size > 30
+  df_num = df_num.filter(df_num["sizei"] > 30)
+
+  # Only include read count over a certain size (selected by looking at the data)
+  df_num = df_num.filter(df_num["readcounti"] > 5)
+  
+  df_num = df_num.groupBy("filename").agg(collect_list("readcounti").alias("listrc"))
+  
+  r =  df_num.rdd.map(lambda r: (r.filename.split("/")[-1].replace("_del_sort.csv", ""), r.listrc)).collect()
+
+  #return mean([normalized_entropy(turn_to_probabilities(counts, float(c[filename]))) for (filename, counts) in r])
+  return mean([normalized_entropy(turn_to_probabilities(counts, __builtin__.sum(counts))) for (filename, counts) in r])
+
 c = get_total_read_counts()
+c
+#c.values()
+#print(__builtin__.max(c.values()))
+
 files=[]
-for passage in (2, 4):
-  for replicate in (8, 9):
+freqs=[]
+ents=[]
+for passage in (2, 4, 5, 7, 9, 10, 12):
+  for replicate in (8,):
     files = find_files(passage, replicate)
     print(passage, replicate)
     print(files)
-    f = get_del_frequency(files)
-    print(f)
+    #f = get_del_frequency(files)
+    #print(f)
+    e = get_del_entropy(files)
+    print(e)
+    freqs.append(f)
+    ents.append(e)
     
+print(freqs)
+print(ents)
+
+def plot_freq():
+  import matplotlib.pyplot as plt
+  plt.plot(freqs)
+  plt.ylabel('Freq')
+  plt.show()
+def plot_ent():
+  import matplotlib.pyplot as plt
+  plt.plot(ents)
+  plt.ylabel('Entropy')
+  plt.show() 
+plot_freq()
+plot_ent()
+
+
+e = get_del_entropy(files)
+e
+
+
+
