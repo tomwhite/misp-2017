@@ -3,6 +3,7 @@ from pyspark.sql.functions import collect_list
 from pyspark.sql.functions import input_file_name
 from pyspark.sql.functions import sum
 from pyspark.sql.functions import max
+import matplotlib.pyplot as plt
 import __builtin__
 import math
   
@@ -111,10 +112,14 @@ c
 #print(__builtin__.max(c.values()))
 
 files=[]
-freqs=[]
-ents=[]
-for passage in (2, 4, 5, 7, 9, 10, 12):
-  for replicate in (8,):
+
+replicates = [8, 9, 11, 12]
+passages = [2, 4, 5, 7, 9, 10, 12]
+entropydict = {}
+for replicate in replicates:
+  freqs=[]
+  ents=[]  
+  for passage in passages:
     files = find_files(passage, replicate)
     print(passage, replicate)
     print(files)
@@ -124,26 +129,29 @@ for passage in (2, 4, 5, 7, 9, 10, 12):
     print(e)
     freqs.append(f)
     ents.append(e)
+  entropydict[replicate] = ents
     
 print(freqs)
 print(ents)
+print(entropydict)
 
 def plot_freq():
-  import matplotlib.pyplot as plt
   plt.plot(freqs)
   plt.ylabel('Freq')
   plt.show()
-def plot_ent():
-  import matplotlib.pyplot as plt
-  plt.plot(ents)
-  plt.ylabel('Entropy')
-  plt.show() 
 plot_freq()
+
+  
+def plot_ent():
+  i = 0
+  colors = ['r', 'g', 'b', 'm']
+  for (replicate, ents) in entropydict.items():
+    plt.plot(passages, ents, colors[i] + 'o')
+    plt.plot(passages, ents, 'k-')
+    i += 1
+  plt.ylabel('Normalized Shannon Entropy (within DG population)')
+  plt.show() 
 plot_ent()
-
-
-e = get_del_entropy(files)
-e
 
 
 
