@@ -126,5 +126,36 @@ show_del_len_hist(p2_del_dist)
 
 p12_del_dist = get_del_dist(p12_files)
 show_del_len_hist(p12_del_dist)
+
+# GC distribution by gene boundary
+def show_gc_chart(gc):
+  # Convert to pandas and show a bar chart with matplotlib
+  pdf=gc.toPandas()
+  
+  plt.plot(pdf['starti'], pdf['gcpercenti'])
+
+  x1,x2,y1,y2 = plt.axis()
+  gene_y_pos=-y2/20
+  plt.axis((x1,x2,2 * gene_y_pos,y2))
+
+  offset = 100
+  index=0
+  for (gene, (start, end)) in genes.items():
+    plt.axvline(x=start, color='r', linestyle='dashed')
+    plt.axvline(x=end, color='r', linestyle='dashed')
+    plt.text(start + offset, (index % 2 + 1) * gene_y_pos, gene, fontsize=8)
+    index += 1
+      
+  plt.title('GC proportion by position (100 base bins)')
+  plt.xlabel('Position')
+  plt.ylabel('Percent GC')
+  
+  plt.show()
+
+gc = spark.read.format("csv").option("header", "true").load("misp/perGC_bin100.csv")
+# Change some columns to ints
+gc_num = gc.withColumn("starti", gc["start"].cast("int")).withColumn("gcpercenti", gc["gcpercent"].cast("int"))
+show_gc_chart(gc_num)
+
   
 # TODO: which part of genome has a DEL in each passage?
