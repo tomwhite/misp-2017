@@ -1,0 +1,24 @@
+Tool,Total,Cris,Fadi,Harshit,Tom,Maria,Christian,Natasha,Jonathan,Bo,Kalle,Rasmus,James,Jay,Amel,Veronica,Veronika,Bjoern,Geoffrey,Link
+Excel,6,1,1,,1,,,,,1,,,,,,1,,,1,http://office.microsoft.com/en-us/excel
+Python,4,,,,1,1,,,1,,,,,,,,1,,,https://www.python.org/
+Matlab,3,,,1,,,,,,1,1,,,,,,,,,https://www.mathworks.com/products/matlab.html
+Matplotlib,3,,,,1,1,,,1,,,,,,,,,,,https://matplotlib.org
+R,3,1,,,,,,,,,,,,1,,,,,1,https://www.r-project.org/
+IGV,2,1,1,,,,,,,,,,,,,,,,,http://software.broadinstitute.org/software/igv/
+Perl,2,1,,,,,,,,,,,,,1,,,,,https://www.perl.org/
+JMP,1,1,,,,,,,,,,,,,,,,,,https://www.jmp.com/
+Tablet,1,,1,,,,,,,,,,,,,,,,,https://ics.hutton.ac.uk/tablet/download-tablet/
+Spark,1,,,,1,,,,,,,,,,,,,,,https://spark.apache.org/
+GraphPad Prism,1,,,,,,1,,,,,,,,,,,,,https://www.graphpad.com/scientific-software/prism/
+Geneius,1,,,,,,1,,,,,,,,,,,,,https://www.geneious.com
+Galaxy,1,,,,,,,1,,,,,,,,,,,,https://galaxyproject.org/
+Julia,1,,,,,,,,,,,1,,,,,,,,https://julialang.org/
+BBtools (bbmap),1,,,,,,,,,,,,1,,,,,,,https://jgi.doe.gov/data-and-tools/bbtools/
+Sambamba,1,,,,,,,,,,,,1,,,,,,,http://lomereiter.github.io/sambamba/
+STAR/star fusion,1,,,,,,,,,,,,1,,,,,,,https://github.com/alexdobin/STAR
+BWA-mem,1,,,,,,,,,,,,,1,,,,,,http://bio-bwa.sourceforge.net/
+JDotter,1,,1,,,,,,,,,,,,,,,,,https://virology.uvic.ca/virology-ca-tools/jdotter/
+Circos,1,,,,,,,,,,,,,,1,,,,,http://circos.ca/
+BLAST,1,,,,,,,,,,,,,,,,,,1,https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastSearch
+Protein Data Bank,1,,,,,,,,,,,,,,,,,,1,http://www.rcsb.org/pdb/home/home.do
+MEME,1,,,,,,,,,,,,,,,,,,1,http://meme-suite.org/tools/meme
